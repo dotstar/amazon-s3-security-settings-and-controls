@@ -17,7 +17,7 @@ In this workshop you will use IAM, S3 Bucket Policies, S3 Block Public Access an
 
 Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not required.
 
-<details><summary>details</summary>
+<details><summary>If you are using your own account</summary>
 ## Deploy AWS resources using CloudFormation
 
 1. Click one of the launch links in the table below to deploy the resources using CloudFormation.  Use a control click or right click to open in a new tab to prevent losing your Github page.
@@ -58,7 +58,7 @@ Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not 
 9. Copy and paste the name of Bucket01 into a document on your computer.  
 
 **Note:** Instances that are launched as part of this CloudFormation template may be in the initializing state for few minutes.
-</details>
+
 ## Connect to the EC2 Instance using EC2 Instance Connect
 
 1. From the AWS console, click  **Services**  and select  **EC2.**
@@ -116,6 +116,59 @@ aws_secret_access_key =
   ![](/images/credentials.png)  
 
 15. Save the file
+
+</details>
+
+<details><summary>If you are running this lab at an AWS Event</summary>
+
+If you are running this at an AWS, the CloudFormation script has already been executed.  You have a terminal session, provided by AWS Cloud9.
+
+At the event, you will be provided a 12-digit hash which provides temporary access to an AWS account.
+
+
+## 1. Getting started with _Event Engine_
+
+In this first lab, we will create parameters.
+
+Start by logging into to [Event Engine](https://dashboard.eventengine.run/login).
+
+Enter your 12-digit hash and Accept.
+
+
+![Login](../img/1.png).
+
+
+Select AWS Console. 
+
+<div align="center">
+
+![AWS Console button](../img/2.png)
+</div>
+
+And again on the Team Dashboard, select Console 
+<div align="center">
+
+![AWS Console button 2](../img/3.png)
+
+</div>
+
+From the AWS console, navigate to [Cloud9](https://console.aws.amazon.com/cloud9/home?region=us-east-1) and "Open IDE"
+<div align="center">
+
+![Cloud9 IDE](../img/4.png)
+</div>
+
+</details>
+
+### IMPORTANT: Workshop Cleanup
+
+If you're attending an AWS event and are provided an account to use, you can ignore this section because we'll destroy the account once the workshop concludes. 
+
+**If you are using your own account**, it is **VERY** important you clean up resources created during the workshop. Follow these steps once you're done going through the workshop to delete resources that were created:
+
+1. Navigate to the [CloudFormation dashboard](https://console.aws.amazon.com/cloudformation/home#/stacks) in the primary region and click on your workshop stack name to load stack details.
+2. Click **Delete** to delete the stack.
+
 
 ## Exercise #1- Require HTTPS
 

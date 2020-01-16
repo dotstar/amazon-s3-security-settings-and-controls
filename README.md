@@ -3,12 +3,21 @@
 © 2019 Amazon Web Services, Inc. and its affiliates. All rights reserved.
 This sample code is made available under the MIT-0 license. See the LICENSE file.
 
-Errors or corrections? Contact [mburbey@amazon.com](mailto:mburbey@amazon.com).
 ---
 ## Workshop Summary
 
+This lab is a fork of the S3 Security lab created by Mike Burbey (https://github.com/aws-samples/amazon-s3-security-settings-and-controls)  The changes in this version are mostly around documenting how to run this with the AWS Event Engine.
+
 In this workshop you will use IAM, S3 Bucket Policies, S3 Block Public Access and AWS Config to demonstrate multiple strategies for securing a S3 Bucket.
 
+### Requirements
+
+* AWS account - if you're doing this workshop as a part of an AWS event, you will be provided an account through a platform called Event Engine. The workshop administrator will provide instructions. If the event specifies you'll need your own account or if you're doing this workshop on your own, it's easy and free to [create an account](https://aws.amazon.com/) if you do not have one already.
+* If using your own AWS account you need to setup a VPC for the rest of the lab.  [Lab0](cfn) has abbreviated instructions on how to run the CloudFormation template to add the VPC.
+
+Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not required.
+
+<details><summary>details</summary>
 ## Deploy AWS resources using CloudFormation
 
 1. Click one of the launch links in the table below to deploy the resources using CloudFormation.  Use a control click or right click to open in a new tab to prevent losing your Github page.
@@ -49,7 +58,7 @@ In this workshop you will use IAM, S3 Bucket Policies, S3 Block Public Access an
 9. Copy and paste the name of Bucket01 into a document on your computer.  
 
 **Note:** Instances that are launched as part of this CloudFormation template may be in the initializing state for few minutes.
-
+</details>
 ## Connect to the EC2 Instance using EC2 Instance Connect
 
 1. From the AWS console, click  **Services**  and select  **EC2.**

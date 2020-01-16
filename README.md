@@ -18,6 +18,8 @@ In this workshop you will use IAM, S3 Bucket Policies, S3 Block Public Access an
 Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not required.
 
 <details><summary>If you are using your own account</summary>
+
+
 ## Deploy AWS resources using CloudFormation
 
 1. Click one of the launch links in the table below to deploy the resources using CloudFormation.  Use a control click or right click to open in a new tab to prevent losing your Github page.

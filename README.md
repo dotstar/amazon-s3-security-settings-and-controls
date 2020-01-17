@@ -123,7 +123,9 @@ aws_secret_access_key =
 
 <details><summary>If you are running this lab at an AWS Event</summary>
 
-If you are running this at an AWS, the CloudFormation script has already been executed.  You have a terminal session, provided by AWS Cloud9.
+
+
+If you are running this at an AWS event, the CloudFormation script has already been executed for you.  You have a terminal session, provided by AWS Cloud9.
 
 At the event, you will be provided a 12-digit hash which provides temporary access to an AWS account.
 

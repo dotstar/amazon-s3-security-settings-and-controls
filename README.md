@@ -1,14 +1,22 @@
 # **Amazon S3 Security Settings and Controls**
 
-© 2019 Amazon Web Services, Inc. and its affiliates. All rights reserved.
+© 2020 Amazon Web Services, Inc. and its affiliates. All rights reserved.
 This sample code is made available under the MIT-0 license. See the LICENSE file.
+
 
 ---
 ## Workshop Summary
 
-This lab is a fork of the S3 Security lab created by Mike Burbey (https://github.com/aws-samples/amazon-s3-security-settings-and-controls)  The changes in this version are mostly around documenting how to run this with the AWS Event Engine.
+This lab is a fork of the S3 Security lab created by Mike Burbey (https://github.com/aws-samples/amazon-s3-security-settings-and-controls ).  It has been edited for time.  The student may wish to review that lab for additional security settings and controls.  
 
-In this workshop you will use IAM, S3 Bucket Policies, S3 Block Public Access and AWS Config to demonstrate multiple strategies for securing a S3 Bucket.
+This workshop will focus on several areas of the [AWS Security Best Practices for S3](https://docs.aws.amazon.com/AmazonS3/latest/dev/security-best-practices.html), including:
+
+1. Block Public Access
+2. Require HTTPS
+3. Enable Versioning
+4. Using VPC endpoints and S3 Bucket policies
+
+5. We will also explore using S3 bucket policies to share specific content with another AWS account.
 
 ### Requirements
 
@@ -21,6 +29,8 @@ Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not 
 
 
 ## Deploy AWS resources using CloudFormation
+
+### This is out-dated and needs to be updated
 
 1. Click one of the launch links in the table below to deploy the resources using CloudFormation.  Use a control click or right click to open in a new tab to prevent losing your Github page.
 
@@ -51,11 +61,11 @@ Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not 
 4. Click  **Next**  Again. (skipping the Options and Advanced options sections)
 5. On the Review page, scroll to the bottom and check the boxes to acknowledge that CloudFormation will create IAM resources, then click  **Create stack**.  
 
-  ![](/images/mod1cf1.png)
+  ![](images/mod1cf1.png)
 6. Click **Events**. Events will not auto refresh.  You will need to manually refresh the page using the refresh button on the right side of the page.
 7. Watch for **S3SecurityWorkshop** and a status of **CREATE_COMPLETE**
 
-  ![](/images/cf_complete.png)
+  ![](images/cf_complete.png)
 8. Click **Output**.  
 9. Copy and paste the name of Bucket01 into a document on your computer.  
 
@@ -69,7 +79,7 @@ Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not 
 4. Right-click on the **S3_Workshop_Instance01** instance and select  **Connect** from the menu.
 5. From the dialog box, select the EC2 Instance Connect option, as shown below:
 
-  ![](/images/mod1ssh1.png)
+  ![](images/mod1ssh1.png)
 
 6. For the **User name** field, enter "ec2-user", then click **Connect**.
 
@@ -86,7 +96,7 @@ A new dialog box or tab on your browser should appear, providing you with a comm
     ```
     Leave Access Key and Secret Key blank, set the region to the region you deployed your CloudFormation template in , output format leave default.
 
-  ![](/images/aws_configure.png)  
+  ![](images/aws_configure.png)  
 
 2. Create a credentials file to be used by the AWS CLI.  This will allow you to switch between two different users easily.  
     ```
@@ -115,7 +125,7 @@ aws_secret_access_key =
 13. Copy the Access key ID and Secret access key into the credentials file under User2.
 14. Compare you credentials file to the one below and ensure your formatting is the same.  
 
-  ![](/images/credentials.png)  
+  ![](images/credentials.png)  
 
 15. Save the file
 
@@ -139,27 +149,27 @@ Start by logging into to [Event Engine](https://dashboard.eventengine.run/login)
 Enter your 12-digit hash and Accept.
 
 
-![Login](../img/1.png).
+![Login](img/1.png).
 
 
 Select AWS Console. 
 
 <div align="center">
 
-![AWS Console button](../img/2.png)
+![AWS Console button](img/2.png)
 </div>
 
 And again on the Team Dashboard, select Console 
 <div align="center">
 
-![AWS Console button 2](../img/3.png)
+![AWS Console button 2](img/3.png)
 
 </div>
 
 From the AWS console, navigate to [Cloud9](https://console.aws.amazon.com/cloud9/home?region=us-east-1) and "Open IDE"
 <div align="center">
 
-![Cloud9 IDE](../img/4.png)
+![Cloud9 IDE](img/4.png)
 </div>
 
 </details>
@@ -173,8 +183,43 @@ If you're attending an AWS event and are provided an account to use, you can ign
 1. Navigate to the [CloudFormation dashboard](https://console.aws.amazon.com/cloudformation/home#/stacks) in the primary region and click on your workshop stack name to load stack details.
 2. Click **Delete** to delete the stack.
 
+## Exercise #1 - Block Public Access
 
-## Exercise #1- Require HTTPS
+AWS buckets are not publically accessible, by default.  You do not need to make them publically available to share with another account, role, or user.  We will explore one method of granting read-only access to another account later in this lab.
+
+There are legitimate reasons to enable public access, such as using S3 to host web content.  The general rule, don't make the bucket public without purpose.
+
+Should you make a bucket public, you'll see this console icon.
+<div align="center">
+
+![public button](img/5.png)
+</div>
+
+For this lab we will **not** be adding any public S3 access.  We will set a policy to disable public access for the account-wide.
+
+Navigate to the [S3 Console](https://console.aws.amazon.com/s3/home?region=us-east-1#).
+
+On the left-side panel, there is a selection "Block public access (account settings)"
+
+<div align="center">
+
+![account defaults](img/6.png)
+</div>
+
+Click here, to set the account-wide defaults.
+
+<div align="center">
+
+![account default settings](img/7.png)
+</div>
+
+Click Edit, then select the check mark, Block _all_ public access.
+
+A word of explanation on these choices. There are two ways to control access, ACLs and bucket policies. For each of these access methods, you can chose whether to enforce rules for existing or future buckets.
+
+In the event you **Need** a public bucket, of course you wouldn't block the whole account.  In that event, you will see a very similar screen from the permissions tab for that bucket.
+
+## Exercise #2- Require HTTPS
 
 In this exercise we will create a S3 Bucket Policy that requires connections to be secure.
 
@@ -215,7 +260,7 @@ In this exercise we will create a S3 Bucket Policy that requires connections to 
 
     aws s3api --endpoint-url ht<span>tps://s3.amazonaws.com --profile user1 head-object --key app1/file1 --bucket ${bucket}
 
-## Exercise #2- Require SSE-S3 Encryption
+## Exercise #3- Require SSE-S3 Encryption
 
 In this exercise we will create a S3 Bucket Policy that requires data at rest encryption.  We will also look at Default Encryption.
 
@@ -267,125 +312,65 @@ In this exercise we will create a S3 Bucket Policy that requires data at rest en
 **Note**  
 Bucket Policies are enforced based on how the request from the client is sent.  In this case the Bucket Policy denied the first attempt to PUT an object. Since Default Encryption is enabled the first attempt would have ended up encrypted anyway, however, Default Encryption doesn't override encryption flags.  For example, if Default Encryption is set to AWS-KMS and a request is sent with AES-256(SSE-S3) the request will be written as AES-256(SSE-S3).  Default Encryption behaves like a default not an override.  If a customer has a requirement that all objects have a certain type of encryption, then the only way to meet that requirement is with a bucket policy.
 
-## Exercise #3- Block Public ACLs using Bucket Policy
+## Exercise #4 - Enable Versioning
 
-In this exercise we will create a S3 Bucket Policy that prevents users from assigning public ACLs to objects.
+S3 is designed to provide 99.999999999% durability of objects over a given year. For example, if you store 10,000,000 objects with Amazon S3, you can on average expect to incur a loss of a single object once every 10,000 years. In addition, Amazon S3 Standard, S3 Standard-IA, and S3 Glacier are all designed to sustain data in the event of an entire S3 Availability Zone loss.
 
-1. From the AWS console, click  **Services**  and select  **S3.**
-2. Click the bucket name. (Copied from CloudFormation Outputs previously.)
-3. Click on the **Permissions** tab.  
-4. Click **Bucket Policy**.  
-5. Click **Delete**, click **Delete** to confirm.  
-6. Copy the bucket policy below and paste into the Bucket Policy Editor.
+From a data protection perspective, the larger threat to your data is an application bug or human error.  One way to protect against this is to enable versioning.   Versioning allows you to preserve, retrieve, and restore every version of every object stored in an Amazon S3 bucket. Once you enable Versioning for a bucket, Amazon S3 preserves existing objects anytime you perform a PUT, POST, COPY, or DELETE operation on them. By default, GET requests will retrieve the most recently written version. Older versions of an overwritten or deleted object can be retrieved by specifying a version in the request.
+
+Since versioning potentially keeps multiple copies of your object, incremental storage prices apply.  You can use Lifecycle rules along with Versioning to implement a rollback window for your Amazon S3 objects.
+
+In this lab, you will enable versioning of a bucket, then delete an object.  Finally, you will _undelete_ the object.
+
+1. Navigate to the (S3 Console)[https://console.aws.amazon.com/s3/home?region=us-east-1]
+2. Click on your bucket, then select Properties.
+
+
+<div align="center">
+
+![account defaults](img/8.png)
+</div>
+
+3. Select the Versioning button, and enable Versioning.
+
+<div align="center">
+
+![account defaults](img/9.png)
+</div>
+
+4. In the terminal window, create a temporary file, and over-write one of the existing files in the bucket.
+
 ```
-{
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-                "s3:PutObject",
-                "s3:PutObjectAcl"
-            ],
-            "Resource": "arn:aws:s3:::BUCKET_NAME/*",
-            "Condition": {
-                "StringEquals": {
-                    "s3:x-amz-acl": "private"
-                }
-            }
-        }
-    ]
-}
+bucket=YOUR_BUCKET_NAME_HERE
+dd if=/dev/zero of=/tmp/tmpfile bs=1024 count=5
+aws s3 cp /tmp/tmpfile s3://$bucket/app1/file1
 ```
-7. Replace BUCKET NAME with the bucket name.  Sample bucket policy below.
-  ![](/images/block_public_acl_1.png)
-8. Click **Save**  
-9. Go to your SSH session, run the following command. The request should succeed since the default for an object ACL is private.  
-  ```
-  aws s3api put-object --key text01 --body textfile --profile user1 --bucket ${bucket}  
-  ```
-10. Run the following command, the request will also succeed even though this isn’t the behavior we are expecting.  
-  ```
-  aws s3api put-object --key text01 --body textfile --acl public-read --profile user1 --bucket ${bucket}  
-  ```
 
-**Note**  
-The current bucket policy allows ACLs that are private but doesn't DENY anything.  It is important to write policies that prevent actions, not allow it when trying to restrict actions against a bucket. The current bucket policy also allows Public access to the bucket unintentionally due to the principal being a wildcard.  
+5. Go back to the S3 console to explore the result.  Navigate to /app1 in your bucket, and click the button "Verions Show".  You now have the old version and the new version of the _/app1/file1_ object.
+<div align="center">
 
-11. Remove the existing bucket policy. Copy the bucket policy below and paste into the Bucket Policy Editor.
+![file versions](img/10.png)
+</div>
+
+5. In the terminal, delete the file.
+
 ```
-{
-    "Statement": [
-        {
-            "Effect": "Deny",
-            "Principal": "*",
-            "Action": [
-                    "s3:PutObject",
-                    "s3:PutObjectAcl"
-                    ],
-            "Resource": "arn:aws:s3:::BUCKET_NAME/*",
-            "Condition": {
-                "StringEquals": {
-                    "s3:x-amz-acl": [
-                           "public-read",
-                           "public-read-write",
-                           "authenticated-read"
-                    ]
-                }
-            }
-        }
-    ]
-}
+bucket=YOUR_BUCKET_NAME_HERE
+aws s3 rm s3://$bucket/app1/file1
 ```
-12. Replace BUCKET NAME with the bucket name.  Sample bucket policy below.
-  ![](/images/block_public_acl_2.png)
-13. Click **Save**
-14. Go to your SSH session, run the following command. The request should succeed since the default for an object ACL is private.  
-  ```
-  aws s3api put-object --key text01 --body textfile --profile user1 --bucket ${bucket}
-  ```
-15. Run the following command, the request should fail as the bucket policy will restrict the public-read ACL.  
-  ```
-  aws s3api put-object --key text01 --body textfile --acl public-read --profile user1 --bucket ${bucket}
-  ```
-## Exercise #4- Configure S3 Block Public Access
-In this exercise we will configure S3 Block Public Access, an easy way to prevent public access to your bucket.
 
-1. From the AWS console, click  **Services**  and select  **S3.**
-2. Click the bucket name. (Copied from CloudFormation Outputs previously.)
-3. Click on the **Permissions** tab.  
-4. Click **Bucket Policy**.  
-5. Click **Delete**, click **Delete** to confirm.  
-6. Click **Block public access**
-7. Click **Edit**
-8. Select **Block public access to buckets and objects granted through new access control lists (ACLs)**
-![](/images/block_public_access_1.png)  
+In the console you will see that the file was deleted, by placing a _Delete maker_ above it.  Toggle the Versions Hide/Show button to see the impace.
 
-9. Click **Save**  
+<div align="center">
 
-![](/images/block_public_access_2.png)  
+![file versions](img/11.png)
+</div>
 
-10. Type **confirm**  
-11. Click **Confirm**  
-12. Go to your SSH session, run the following command. The request should succeed since the default for an object ACL is private.  
-  ```
-  aws s3api put-object --key text01 --body textfile --profile user1 --bucket ${bucket}  
-  ```
-13. Run the following command, the request should fail as the bucket policy will restrict the public-read ACL.  
-  ```
-  aws s3api put-object --key text01 --body textfile --acl public-read --profile user1 --bucket ${bucket}  
-  ```
-14. From the AWS console, click  **Services**  and select  **S3.**  
-15. Click the bucket name. (Copied from CloudFormation Outputs previously.)  
-16. Click on the **Permissions** tab.  
-17. Click **Block public access**  
-18. Click **Edit**  
-19. Uncheck **Block public access to buckets and objects granted through new access control lists (ACLs)**  
-![](/images/block_public_access_3.png)  
-20. Click **Save**   
-![](/images/block_public_access_2.png)  
-21. Type **confirm**.  
-22. Click **Confirm**.  
+6. Undelete the file, by deleting the _Delete marker_.  Select the Delete marker, Actions -> Delete.
+
+Versioning comes in handy if you accidentally delete an object.  For more robust data protection, it is often combined with [MFA delete](https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMFADelete.html) requirements or  [replicating](https://docs.aws.amazon.com/AmazonS3/latest/dev/replication.html) the object to another bucket in a second account.
+
+Note - Versioning can not be disabled, but it can be suspended.  You suspend versioning to stop accruing new versions of the same object in a bucket. You might do this because you only want a single version of an object in a bucket, or you might not want to accrue charges for multiple versions. 
 
 ## Exercise #5- Restrict Access to a  S3 VPC Endpoint
 
@@ -451,63 +436,130 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 28. Click **Bucket Policy**.
 29. Click **Delete**, click **Delete** to confirm.
 
-##  Exercise #6- Use AWS Config to Detect a Public Bucket  
+## Lab 7 - Extra Credit - Share your bucket with another AWS account
 
-1. From the AWS console, click  **Services**  and select  **Config.**
-2. If you haven't used AWS Config previously you will be brought to the Get started page.  If you have already used AWS Config jump to step 7.  
-![](/images/config_4.png)
-3. Go to bottom of page, under AWS Config role, select **Create AWS Config service-linked role**.  If you have already used AWS Config in another region, instead select **Use an existing AWS Config service-linked role**.  
+There are times, when you may want to share specific data with another AWS account.  While this might be accomplished with an access control list, it is recommended to use bucket policies. [ ACLs, an older feature of S3, are still supported but no longer recommended ].
 
-  ![](/images/config_6.png)
-4. Click **Next**.  
-5. Click **Skip**.  
-6. Click **Confirm**.  
-**Note**  
-If you receive an error regarding S3, AWS Config was used previously in another region.  Click **Previous**, **Previous**, under **Amazon S3 Bucket**, select **Choose a bucket from your account**.  Bucket name will start with config-bucket. Click **Next**, click **Skip**, click **Confirm**.  
+For this lab, you will need a partner, with a second AWS account.  You will create a bucket, add some content, and share that bucket with your partner.
 
-  ![](/images/config_7.png)
-7. Click **Rules**.  
-8. Click **Add Rule**.  
-9. Filter rules by typing **S3** into search box.  
-10. Click **s3_bucket_public_write_prohibited**.  
-11. Click **Next**,**Confirm**.  
-12. Click **Rules**, in the left pane.  
-13. The rule needs time to evaluate.  Refresh the page until you see **Compliant**.  
-![](/images/config_5.png)
-14. From the AWS console, click  **Services**  and select  **S3.**  
-15. Click the bucket name. (Copied from CloudFormation Outputs previously.)  
-16. Click on the **Permissions** tab.  
-17. Click on **Access Control List**.  
-18. Under Public access, select **Everyone**.  
-19. Check **Write objects** in the pop up window.  
-20. Click **Save**.  
-![](/images/config_2.png)  
-21. From the AWS console, click  **Services**  and select  **Config.**  
-22. Click **Rules**.  
-23. Click **s3_bucket_public_write_prohibited**.  
-24. Click **Re-evaluate**.   
-25. You will need to refresh the screen.  Your bucket should be **Noncompliant**.  If everything is still compliant, wait a few minutes and Re-evaluate a second time.  
-![](/images/config_3.png)
-26. From the AWS console, click  **Services**  and select  **S3.**  
-27. Click the bucket name. (Copied from CloudFormation Outputs previously.)  
-28. Click on the **Permissions** tab.  
-29. Click on **Access Control List**.   
-30. Under Public access, select **Everyone**.   
-31. Uncheck **Write objects** in the pop up window.  
-32. Click **Save**.   
+1. Create a bucket, and add a file to the bucket.  From the CLI, type
 
-## Exercise #7- Restrict Access to an IP Address
+```
+ bucket=NEW_BUCKET_NAME_HERE
+ aws s3 mb s3://$bucket
+ dd if=/dev/zero of=/tmp/foo bs=1024 count=1024
+ aws s3 cp /tmp/foo s3://$bucket/shared-data/foo
+```
 
-Create a S3 Bucket Policy that will restrict access to your S3 Bucket to only the IP address of the EC2 Instance.  
+2. Verify the bucket contents
 
-This is intended to be self lead.  Use the following documentation for help, https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html  
-## Exercise #8- Restrict Access to an IP Address and User Restrictions
+```
+ aws s3 ls s3://$bucket --recursive
+```
 
-Add to your S3 Bucket Policy from Exercise #7.  
-s3_security_lab_user1 should only be able to read objects.  
-s3_security_lab_user2 should be able to read and write objects.  
+3. Select a partner, and get their account number.
 
-This is intended to be self lead.  Use the following documentation for help, https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html
+For this lab, select a partner.  Use their account number, and share only the /shared-data prefix with that partner.  You will need to know their account number.  One way to learn this is from the console.  If you click right, on the login at the top right of the console, your account number will be included in that information.  The console generates account numbers with “-“ for readability; the actual account number doesn’t include these “-“ symbols.
+
+An alternate method is through the CLI.  Ask you partner to run the command
+```
+ aws sts get-caller-identity
+```
+
+Make a note of their account number, you will need it to generate the bucket policy.
+
+Navigate to your bucket in the S3 console. ( https://console.aws.amazon.com/s3/home?region=us-east-1 ).  Click on your bucket to open it, and select the Permissions tab.
+
+<div align="center">
+
+![account defaults](img/12.png)
+</div>
+
+
+Select **Bucket Policy**
+
+<div align="center">
+
+![account defaults](img/13.png)
+</div>
+
+Near the bottom of the screen, select “Policy generator”
+We need to create two elements of the policy.  We’d like the other account to be able to GetObjects and ListObjects. 
+
+_Create GetObject Element of policy_
+**Type of Policy:** S3 Bucket Policy
+**Principal:** The account number you are sharing with
+**Actions:** 
+GetObject
+**Amazon Resource Name:** _( note, edit this for the bucket you created ).  Be sure to include the “*” at the end._
+
+arn:aws:s3:::YOUR-BUCKET-NAME/share/*
+
+This ARN matches all objects in the prefix “share” in bucket “YOUR-BUCKET-NAME”.  
+
+Click Add Statement to add permissions to list objects.
+
+_Create ListBucket Element of policy_
+**Type of Policy:** S3 Bucket Policy
+**Principal:** The account number you are sharing with
+**Actions:** 
+ListBucket
+**Amazon Resource Name:** _( note, edit this for the bucket you created. )
+_  
+arn:aws:s3:::YOUR-BUCKET-NAME
+
+When you’ve entered the data for your policy, click Add Statement, and Generate Policy.
+
+Copy the resulting policy JSON to a text file.  It should look something like:
+
+```json
+{
+  "Id": "Policy1579374599915",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1579374406593",
+      "Action": [ 
+        "s3:GetObject"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/share/*",
+      "Principal": {
+        "AWS": [
+          "1234567890AB"
+        ]
+      }
+    },
+    {
+      "Sid": "Stmt1579374574931",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/share",
+      "Principal": {
+        "AWS": [
+          "1234567890AB"
+        ]
+      }
+    }
+  ]
+}
+```
+
+Return to the prior S3 tab, where you were editing the bucket policy, and paste in the new policy, then click save.
+
+3. Go to your partners account and verify that you can access the bucket.
+
+```
+ bucket=YOUR_BUCKET_NAME
+ aws s3 ls s3://$bucket
+ aws s3 cp s3://$bucket/shared-data/foo /tmp/myfile
+ ls -l /tmp/myfile
+```
+
+It is also possible to share just the contents of a single prefix with another account, using a Condition statement.  See this [blog post](https://aws.amazon.com/blogs/security/writing-iam-policies-grant-access-to-user-specific-folders-in-an-amazon-s3-bucket/) for more information on sharing just one folder.
+
 ## Clean Up Resources
 
 To ensurer you don't continue to be billed for services in your account from this workshop follow the steps below to remove all resources created ruing the workshop.

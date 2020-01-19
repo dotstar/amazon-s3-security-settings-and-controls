@@ -185,9 +185,9 @@ If you're attending an AWS event and are provided an account to use, you can ign
 
 ## Exercise #1 - Block Public Access
 
-AWS buckets are not publically accessible, by default.  You do not need to make them publically available to share with another account, role, or user.  We will explore one method of granting read-only access to another account later in this lab.
+By default, AWS buckets are not publically accessible.  You do not need to make them publically available to share with another account, role, or user.  We will explore one method of granting read-only access to another account later in this lab.
 
-There are legitimate reasons to enable public access, such as using S3 to host web content.  The general rule, don't make the bucket public without purpose.
+There are legitimate reasons to enable public access, such as using S3 to host web content or to share public-domain data.  The general rule, don't make the bucket public without purpose.
 
 Should you make a bucket public, you'll see this console icon.
 <div align="center">
@@ -228,7 +228,7 @@ In this exercise we will create a S3 Bucket Policy that requires connections to 
 3. Click on the **Permissions** tab.  
 4. Click **Bucket Policy**.  
 5. Copy the bucket policy below and paste into the Bucket Policy Editor.
-```
+```json
 {
 "Statement": [
 {
@@ -252,13 +252,16 @@ In this exercise we will create a S3 Bucket Policy that requires connections to 
 
 7. Click **Save**
 8. In your SSH session run the following command. The command should return a 403 error since the endpoint-url is HTTP.
-
+```
     aws s3api head-object --key app1/file1 --endpoint-url ht<span>tp//s3.amazonaws.com --profile user1 --bucket ${bucket}
-
+```
 
 9. In your SSH session run the following command. This command should succeed since it is using HTTPS.
-
+```
     aws s3api --endpoint-url ht<span>tps://s3.amazonaws.com --profile user1 head-object --key app1/file1 --bucket ${bucket}
+```
+
+You have successfuly set the bucket policy to require HTTPS.  Please proceed to Exercise 3.
 
 ## Exercise #3- Require SSE-S3 Encryption
 
@@ -270,7 +273,8 @@ In this exercise we will create a S3 Bucket Policy that requires data at rest en
 4. Click **Bucket Policy**.  
 5. Click **Delete**, click **Delete** to confirm.  
 6. Copy the bucket policy below and paste into the Bucket Policy Editor.
-```
+
+```json
 {
     "Statement": [
         {
@@ -287,7 +291,47 @@ In this exercise we will create a S3 Bucket Policy that requires data at rest en
     ]
 }
 ```
-7. Replace BUCKET_NAME with the bucket name.  Sample bucket policy below.  
+
+<details>
+<summary>What if you want both HTTP and Encryption?</summary>
+
+A bucket can only have a single policy.  As such, by pasting in the policy above, you are removing the policy to require HTTPS which we created in the prior exercise.  That is why the policy is a JSON array.  To have both HTTPS and require server-side encryption, you add both statements, similar to:
+
+```json
+
+{
+"Statement": [
+{
+   "Action": "s3:*",
+   "Effect": "Deny",
+   "Principal": "*",
+   "Resource": "arn:aws:s3:::BUCKET_NAME/*",
+   "Condition": {
+       "Bool": {
+        "aws:SecureTransport": false
+        }
+    }
+    },
+    {
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::BUCKET_NAME/*",
+            "Condition": {
+                "StringNotEquals": {
+                    "s3:x-amz-server-side-encryption": "AES256"
+                }
+            }
+        }
+  ]
+}
+
+```
+
+</details>
+
+
+1. Replace BUCKET_NAME with the bucket name.  Sample bucket policy below.  
 
   ![](/images/sse_s3_bucket_policy.png)   
 8. Click **Save**  
@@ -310,19 +354,21 @@ In this exercise we will create a S3 Bucket Policy that requires data at rest en
 15. Default Encryption for AES-256(SSE-S3) is enabled.  
 
 **Note**  
-Bucket Policies are enforced based on how the request from the client is sent.  In this case the Bucket Policy denied the first attempt to PUT an object. Since Default Encryption is enabled the first attempt would have ended up encrypted anyway, however, Default Encryption doesn't override encryption flags.  For example, if Default Encryption is set to AWS-KMS and a request is sent with AES-256(SSE-S3) the request will be written as AES-256(SSE-S3).  Default Encryption behaves like a default not an override.  If a customer has a requirement that all objects have a certain type of encryption, then the only way to meet that requirement is with a bucket policy.
+Bucket Policies are enforced based on the request from the client.  In this case the Bucket Policy denied the first attempt to PUT an object. Since Default Encryption is enabled the first attempt would have ended up encrypted anyway, however, Default Encryption doesn't override encryption flags.  For example, if Default Encryption is set to AWS-KMS and a request is sent with AES-256(SSE-S3) the request will be written as AES-256(SSE-S3).  Default Encryption behaves like a default not an override.  If a customer has a requirement that all objects have a certain type of encryption, then the only way to meet that requirement is with a bucket policy.
 
 ## Exercise #4 - Enable Versioning
 
 S3 is designed to provide 99.999999999% durability of objects over a given year. For example, if you store 10,000,000 objects with Amazon S3, you can on average expect to incur a loss of a single object once every 10,000 years. In addition, Amazon S3 Standard, S3 Standard-IA, and S3 Glacier are all designed to sustain data in the event of an entire S3 Availability Zone loss.
 
-From a data protection perspective, the larger threat to your data is an application bug or human error.  One way to protect against this is to enable versioning.   Versioning allows you to preserve, retrieve, and restore every version of every object stored in an Amazon S3 bucket. Once you enable Versioning for a bucket, Amazon S3 preserves existing objects anytime you perform a PUT, POST, COPY, or DELETE operation on them. By default, GET requests will retrieve the most recently written version. Older versions of an overwritten or deleted object can be retrieved by specifying a version in the request.
+From a data protection perspective, the larger threat to your data is an application bug or human error.  One way to protect against this is to enable versioning.   
 
-Since versioning potentially keeps multiple copies of your object, incremental storage prices apply.  You can use Lifecycle rules along with Versioning to implement a rollback window for your Amazon S3 objects.
+Versioning allows you to preserve, retrieve, and restore every version of every object stored in an Amazon S3 bucket. Once you enable Versioning for a bucket, Amazon S3 preserves existing objects anytime you perform a PUT, POST, COPY, or DELETE operation on them. By default, GET requests will retrieve the most recently written version. Older versions of an overwritten or deleted object can be retrieved by specifying a version in the request.
+
+Since versioning potentially keeps multiple copies of your object, incremental storage prices apply.  You can use [ Lifecycle rules ](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-lifecycle.html) along with Versioning to implement a rollback window for your Amazon S3 objects.
 
 In this lab, you will enable versioning of a bucket, then delete an object.  Finally, you will _undelete_ the object.
 
-1. Navigate to the (S3 Console)[https://console.aws.amazon.com/s3/home?region=us-east-1]
+1. Navigate to the [S3 Console](https://console.aws.amazon.com/s3/home?region=us-east-1)
 2. Click on your bucket, then select Properties.
 
 
@@ -340,21 +386,22 @@ In this lab, you will enable versioning of a bucket, then delete an object.  Fin
 
 4. In the terminal window, create a temporary file, and over-write one of the existing files in the bucket.
 
-```
+```bash
 bucket=YOUR_BUCKET_NAME_HERE
 dd if=/dev/zero of=/tmp/tmpfile bs=1024 count=5
 aws s3 cp /tmp/tmpfile s3://$bucket/app1/file1
 ```
 
 5. Go back to the S3 console to explore the result.  Navigate to /app1 in your bucket, and click the button "Verions Show".  You now have the old version and the new version of the _/app1/file1_ object.
+
 <div align="center">
 
 ![file versions](img/10.png)
 </div>
 
-5. In the terminal, delete the file.
+1. In the terminal, delete the file.
 
-```
+```bash
 bucket=YOUR_BUCKET_NAME_HERE
 aws s3 rm s3://$bucket/app1/file1
 ```
@@ -396,7 +443,8 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 14. Click on the **Permissions** tab.  
 14. Click **Bucket Policy**.  
 15. Copy the bucket policy below and paste into the Bucket Policy Editor.
-```
+
+```json
 {
     "Statement": [
         {
@@ -417,7 +465,7 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 ![](/images/vpc_endpoint_6.png)
 17. Click **Save**
 18. Go to your SSH session, the request will fail since the S3 VPCE isn't associated with a route table.  
-  ```
+  ```bash
   aws s3api head-object --key app1/file1 --profile user1 --bucket ${bucket}
   ```
 19. In the AWS Console go to **VPC**.  
@@ -427,9 +475,11 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 ![](/images/vpc_endpoint_7.png)
 23. Click **Modify Route Tables**
 24. Go to your SSH session, run the following command. The request should now succeed.  
-  ```
+  
+```bash
   aws s3api head-object --key app1/file1 --profile user1 --bucket ${bucket}
-  ```
+```
+
 25. From the AWS console, click  **Services**  and select  **S3.**
 26. Click the bucket name. (Copied from CloudFormation Outputs previously.)
 27. Click on the **Permissions** tab.  
@@ -444,7 +494,7 @@ For this lab, you will need a partner, with a second AWS account.  You will crea
 
 1. Create a bucket, and add a file to the bucket.  From the CLI, type
 
-```
+```bash
  bucket=NEW_BUCKET_NAME_HERE
  aws s3 mb s3://$bucket
  dd if=/dev/zero of=/tmp/foo bs=1024 count=1024
@@ -453,7 +503,7 @@ For this lab, you will need a partner, with a second AWS account.  You will crea
 
 2. Verify the bucket contents
 
-```
+```bash
  aws s3 ls s3://$bucket --recursive
 ```
 
@@ -462,7 +512,8 @@ For this lab, you will need a partner, with a second AWS account.  You will crea
 For this lab, select a partner.  Use their account number, and share only the /shared-data prefix with that partner.  You will need to know their account number.  One way to learn this is from the console.  If you click right, on the login at the top right of the console, your account number will be included in that information.  The console generates account numbers with “-“ for readability; the actual account number doesn’t include these “-“ symbols.
 
 An alternate method is through the CLI.  Ask you partner to run the command
-```
+
+```bash
  aws sts get-caller-identity
 ```
 
@@ -483,8 +534,8 @@ Select **Bucket Policy**
 ![account defaults](img/13.png)
 </div>
 
-Near the bottom of the screen, select “Policy generator”
-We need to create two elements of the policy.  We’d like the other account to be able to GetObjects and ListObjects. 
+Near the bottom of the screen, select “**Policy generator**”
+We need to create two elements of the policy.  We’d like the other account to be able to GetObjects and ListObjects.
 
 _Create GetObject Element of policy_
 **Type of Policy:** S3 Bucket Policy
@@ -551,9 +602,11 @@ Return to the prior S3 tab, where you were editing the bucket policy, and paste 
 
 3. Go to your partners account and verify that you can access the bucket.
 
-```
+```bash
  bucket=YOUR_BUCKET_NAME
+ # List the other account's bucket
  aws s3 ls s3://$bucket
+ # Pull the object (GetObject) from the other account's bucket
  aws s3 cp s3://$bucket/shared-data/foo /tmp/myfile
  ls -l /tmp/myfile
 ```
@@ -565,9 +618,11 @@ It is also possible to share just the contents of a single prefix with another a
 To ensurer you don't continue to be billed for services in your account from this workshop follow the steps below to remove all resources created ruing the workshop.
 
 1. In your SSH session run the following command.  
-  ```
+  
+  ```bash
   aws s3 rm s3://${bucket} --recursive  --profile user1
   ```
+
 2. From the AWS console, click  **Services**  and select  **Config.**  
 2. Click **Rules**.  
 3. Click **s3_bucket_public_write_prohibited**.

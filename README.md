@@ -3,7 +3,6 @@
 © 2020 Amazon Web Services, Inc. and its affiliates. All rights reserved.
 This sample code is made available under the MIT-0 license. See the LICENSE file.
 
-
 ---
 ## Workshop Summary
 
@@ -13,10 +12,10 @@ This workshop will focus on several areas of the [AWS Security Best Practices fo
 
 1. Block Public Access
 2. Require HTTPS
-3. Enable Versioning
-4. Using VPC endpoints and S3 Bucket policies
-
-5. We will also explore using S3 bucket policies to share specific content with another AWS account.
+3. Require SSE-S3 Encryption
+4. Enable Versioning
+5. Using VPC endpoints and S3 Bucket policies
+6. Extra Credit - Share your bucket with another AWS account
 
 ### Requirements
 
@@ -26,7 +25,6 @@ This workshop will focus on several areas of the [AWS Security Best Practices fo
 Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not required.
 
 <details><summary>If you are using your own account</summary>
-
 
 ## Deploy AWS resources using CloudFormation
 
@@ -219,6 +217,8 @@ A word of explanation on these choices. There are two ways to control access, AC
 
 In the event you **Need** a public bucket, of course you wouldn't block the whole account.  In that event, you will see a very similar screen from the permissions tab for that bucket.
 
+You have successfuly set the account to not allow public S3 access.  Please proceed to exercise 2.
+
 ## Exercise #2- Require HTTPS
 
 In this exercise we will create a S3 Bucket Policy that requires connections to be secure.
@@ -252,12 +252,14 @@ In this exercise we will create a S3 Bucket Policy that requires connections to 
 
 7. Click **Save**
 8. In your SSH session run the following command. The command should return a 403 error since the endpoint-url is HTTP.
-```
+
+```bash
     aws s3api head-object --key app1/file1 --endpoint-url ht<span>tp//s3.amazonaws.com --profile user1 --bucket ${bucket}
 ```
 
 9. In your SSH session run the following command. This command should succeed since it is using HTTPS.
-```
+
+```bash
     aws s3api --endpoint-url ht<span>tps://s3.amazonaws.com --profile user1 head-object --key app1/file1 --bucket ${bucket}
 ```
 
@@ -360,7 +362,7 @@ Bucket Policies are enforced based on the request from the client.  In this case
 
 S3 is designed to provide 99.999999999% durability of objects over a given year. For example, if you store 10,000,000 objects with Amazon S3, you can on average expect to incur a loss of a single object once every 10,000 years. In addition, Amazon S3 Standard, S3 Standard-IA, and S3 Glacier are all designed to sustain data in the event of an entire S3 Availability Zone loss.
 
-From a data protection perspective, the larger threat to your data is an application bug or human error.  One way to protect against this is to enable versioning.   
+From a data protection perspective, the biggest threat to your data is an application bug or human error.  One way to protect against this is to enable versioning.
 
 Versioning allows you to preserve, retrieve, and restore every version of every object stored in an Amazon S3 bucket. Once you enable Versioning for a bucket, Amazon S3 preserves existing objects anytime you perform a PUT, POST, COPY, or DELETE operation on them. By default, GET requests will retrieve the most recently written version. Older versions of an overwritten or deleted object can be retrieved by specifying a version in the request.
 
@@ -392,32 +394,34 @@ dd if=/dev/zero of=/tmp/tmpfile bs=1024 count=5
 aws s3 cp /tmp/tmpfile s3://$bucket/app1/file1
 ```
 
-5. Go back to the S3 console to explore the result.  Navigate to /app1 in your bucket, and click the button "Verions Show".  You now have the old version and the new version of the _/app1/file1_ object.
+5. Go back to the S3 console to explore the result.  Navigate to /app1 in your bucket, and click the button "Verions Show".  
+
+You now have the old version and the new version of the **_/app1/file1_** object.
 
 <div align="center">
 
 ![file versions](img/10.png)
 </div>
 
-1. In the terminal, delete the file.
+6. In the terminal, delete the file.
 
 ```bash
 bucket=YOUR_BUCKET_NAME_HERE
 aws s3 rm s3://$bucket/app1/file1
 ```
 
-In the console you will see that the file was deleted, by placing a _Delete maker_ above it.  Toggle the Versions Hide/Show button to see the impace.
+In the console you will see that the file was deleted, by placing a _Delete marker_ above it.  Toggle the Versions Hide/Show button to see the impact.
 
 <div align="center">
 
 ![file versions](img/11.png)
 </div>
 
-6. Undelete the file, by deleting the _Delete marker_.  Select the Delete marker, Actions -> Delete.
+7. Undelete the file, by deleting the _Delete marker_.  Select the Delete marker, Actions -> Delete.
 
 Versioning comes in handy if you accidentally delete an object.  For more robust data protection, it is often combined with [MFA delete](https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMFADelete.html) requirements or  [replicating](https://docs.aws.amazon.com/AmazonS3/latest/dev/replication.html) the object to another bucket in a second account.
 
-Note - Versioning can not be disabled, but it can be suspended.  You suspend versioning to stop accruing new versions of the same object in a bucket. You might do this because you only want a single version of an object in a bucket, or you might not want to accrue charges for multiple versions. 
+Note - Versioning can not be disabled, but it can be suspended.  You suspend versioning to stop accruing new versions of the same object in a bucket. You might do this because you only want a single version of an object in a bucket, or you might not want to accrue charges for multiple versions.
 
 ## Exercise #5- Restrict Access to a  S3 VPC Endpoint
 
@@ -461,19 +465,23 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
     ]
 }
 ```
+
 16. Replace BUCKET_NAME with the bucket name and VPC_ENDPOINT_ID with the Endpoint ID.  Sample bucket policy below.  
 ![](/images/vpc_endpoint_6.png)
 17. Click **Save**
 18. Go to your SSH session, the request will fail since the S3 VPCE isn't associated with a route table.  
+  
   ```bash
   aws s3api head-object --key app1/file1 --profile user1 --bucket ${bucket}
   ```
+
 19. In the AWS Console go to **VPC**.  
 20. Click **Endpoints**.  
 21. The VPC Endpoint should be selected.  Select **Actions**, then click **Manage Route Tables**.
 22. Select the Route Table that is associated with **S3SecurityWorkshopSubnet**
 ![](/images/vpc_endpoint_7.png)
-23. Click **Modify Route Tables**
+23. Click **Modify Route Tables**.  
+    This will cause the hosts inside your VPC to route through the VPC gateway endpoint, inside your VPC to access S3.  The request will **not** have to travel across public Internet address space.
 24. Go to your SSH session, run the following command. The request should now succeed.  
   
 ```bash
@@ -486,7 +494,7 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 28. Click **Bucket Policy**.
 29. Click **Delete**, click **Delete** to confirm.
 
-## Lab 7 - Extra Credit - Share your bucket with another AWS account
+## Lab 6 - Extra Credit - Share your bucket with another AWS account
 
 There are times, when you may want to share specific data with another AWS account.  While this might be accomplished with an access control list, it is recommended to use bucket policies. [ ACLs, an older feature of S3, are still supported but no longer recommended ].
 

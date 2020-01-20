@@ -423,12 +423,12 @@ Note - Versioning can not be disabled, but it can be suspended.  You suspend ver
 
 In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limit access to only requests that pass through the VPC Endpoint.  This is an easy way to limit access to only clients in your VPC.
 
-1. In the AWS Console go to **VPC**.  
+1. In the AWS Console go to [VPC](https://console.aws.amazon.com/vpc/home?region=us-east-1#dashboard:).  
 2. Click **Endpoints**.  
 3. Click **Create Endpoint**.
 4. Select the **S3** service name.
 ![](/images/vpc_endpoint_1.png)
-5. Select the **SecurityWorkshopVPC** from the drop down menu.
+5. Select the **SecurityWorkshop** from the drop down menu.
 ![](/images/vpc_endpoint_2.png)
 6. Do not select any route tables for now.  
 ![](/images/vpc_endpoint_3.png)
@@ -476,10 +476,14 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 20. Click **Endpoints**.  
 21. The VPC Endpoint should be selected.  Select **Actions**, then click **Manage Route Tables**.
 22. Select the Route Table that is associated with **S3SecurityWorkshopSubnet**
+You may need to hover over the subnets in the "Associated With" column to find the appropriate networks.
+
 ![](/images/vpc_endpoint_7.png)
-23. Click **Modify Route Tables**.  
+23.  Click **Modify Route Tables**.  
     This will cause the hosts inside your VPC to route through the VPC gateway endpoint, inside your VPC to access S3.  The request will **not** have to travel across public Internet address space.
-24. Go to your SSH session, run the following command. The request should now succeed.  
+
+    This action changes the routing in your public subnets so that S3 traffic is routed to the S3 VPC endpoint, rather than out to the public Internet.
+24.  Go to your SSH session, run the following command. The request should now succeed.  
   
 ```bash
   aws s3api head-object --key app1/file1 --bucket ${bucket}
@@ -524,7 +528,14 @@ An alternate method is through the CLI.  Ask you partner to run the command
 
 Make a note of their account number, you will need it to generate the bucket policy.
 
-Navigate to your bucket in the S3 console. ( https://console.aws.amazon.com/s3/home?region=us-east-1 ).  Click on your bucketname to open the bucket you just created.  You may need to refresh the browser for the new bucket to be listed. Select the Permissions tab.
+4. Have your partner try to access your new AWS bucket.  It should fail, because they don't have access.
+
+```bash
+ aws s3 ls s3://daveaws-tmp123456
+```
+
+
+5. Navigate to your bucket in the S3 console. ( https://console.aws.amazon.com/s3/home?region=us-east-1 ).  Click on your bucketname to open the bucket you just created.  You may need to refresh the browser for the new bucket to be listed. Select the Permissions tab.
 
 <div align="center">
 
@@ -564,7 +575,9 @@ _Create ListBucket Element of policy_
 ListBucket
 **Amazon Resource Name:** _( note, edit this for the bucket you created. )
 _  
-arn:aws:s3:::YOUR-BUCKET-NAME
+arn:aws:s3:::YOUR-BUCKET-NAME/*
+
+The **"*"** at the end is important, this policy says allow the account to get **All** of the objects.
 
 When you’ve entered the data for your policy, click **Add Statement**.
 
@@ -609,7 +622,7 @@ Click **Generate Policy** and the generator creates your bucket policy JSON.
 
 Return to the prior S3 tab, where you were editing the bucket policy, and paste in the new policy, then click **Save**.
 
-3. Go to your partners account and verify that you can access the bucket.
+1. Go to your partners account and verify that you can access the bucket.
 
 ```bash
  bucket=YOUR_BUCKET_NAME
@@ -621,6 +634,8 @@ Return to the prior S3 tab, where you were editing the bucket policy, and paste 
 ```
 
 It is also possible to share just the contents of a single prefix with another account, using a Condition statement.  See this [blog post](https://aws.amazon.com/blogs/security/writing-iam-policies-grant-access-to-user-specific-folders-in-an-amazon-s3-bucket/) for more information on sharing just one folder.
+
+**You have successfully completed this S3 high-level security overview workshop.**  If you are using your own account, please remember to delete the lab resources.
 
 ## Clean Up Resources
 

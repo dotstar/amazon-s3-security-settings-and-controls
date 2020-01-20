@@ -133,7 +133,7 @@ aws_secret_access_key =
 
 
 
-If you are running this at an AWS event, the CloudFormation script has already been executed for you.  You have a terminal session, provided by AWS Cloud9.
+If you are running this at an AWS event, the CloudFormation script has already been executed for you.  You have a terminal session, powered by AWS Cloud9.
 
 At the event, you will be provided a 12-digit hash which provides temporary access to an AWS account.
 
@@ -174,12 +174,9 @@ From the AWS console, navigate to [Cloud9](https://console.aws.amazon.com/cloud9
 
 ### IMPORTANT: Workshop Cleanup
 
-If you're attending an AWS event and are provided an account to use, you can ignore this section because we'll destroy the account once the workshop concludes. 
+If you're attending an AWS event and are provided an account to use, you can ignore this section because we'll destroy the account once the workshop concludes.
 
-**If you are using your own account**, it is **VERY** important you clean up resources created during the workshop. Follow these steps once you're done going through the workshop to delete resources that were created:
-
-1. Navigate to the [CloudFormation dashboard](https://console.aws.amazon.com/cloudformation/home#/stacks) in the primary region and click on your workshop stack name to load stack details.
-2. Click **Delete** to delete the stack.
+**If you are using your own account**, it is **VERY** important you clean up resources created during the workshop. Follow these steps once you're done going through the workshop to delete resources that were created.  Please follow the instructions, at the end of the lab, to delete these resources.
 
 ## Exercise #1 - Block Public Access
 
@@ -211,11 +208,11 @@ Click here, to set the account-wide defaults.
 ![account default settings](img/7.png)
 </div>
 
-Click Edit, then select the check mark, Block _all_ public access.
+Click Edit, then select the check mark, Block _all_ public access.  Click **Save** to save your changes, then confirm that you really intend to block public access.
 
 A word of explanation on these choices. There are two ways to control access, ACLs and bucket policies. For each of these access methods, you can chose whether to enforce rules for existing or future buckets.
 
-In the event you **Need** a public bucket, of course you wouldn't block the whole account.  In that event, you will see a very similar screen from the permissions tab for that bucket.
+In the event you **Need** a public bucket, of course you wouldn't block the whole account.  In that event, you will see a very similar screen from the permissions tab for each bucket.
 
 You have successfuly set the account to not allow public S3 access.  Please proceed to exercise 2.
 
@@ -254,13 +251,13 @@ In this exercise we will create a S3 Bucket Policy that requires connections to 
 8. In your SSH session run the following command. The command should return a 403 error since the endpoint-url is HTTP.
 
 ```bash
-    aws s3api head-object --key app1/file1 --endpoint-url ht<span>tp//s3.amazonaws.com --profile user1 --bucket ${bucket}
+    aws s3api head-object --endpoint-url http://s3.amazonaws.com --key app1/file1 --bucket ${bucket}
 ```
 
 9. In your SSH session run the following command. This command should succeed since it is using HTTPS.
 
 ```bash
-    aws s3api --endpoint-url ht<span>tps://s3.amazonaws.com --profile user1 head-object --key app1/file1 --bucket ${bucket}
+    aws s3api --endpoint-url https://s3.amazonaws.com head-object --key app1/file1 --bucket ${bucket}
 ```
 
 You have successfuly set the bucket policy to require HTTPS.  Please proceed to Exercise 3.
@@ -295,7 +292,7 @@ In this exercise we will create a S3 Bucket Policy that requires data at rest en
 ```
 
 <details>
-<summary>What if you want both HTTP and Encryption?</summary>
+<summary>What if you want both HTTPS and Encryption?</summary>
 
 A bucket can only have a single policy.  As such, by pasting in the policy above, you are removing the policy to require HTTPS which we created in the prior exercise.  That is why the policy is a JSON array.  To have both HTTPS and require server-side encryption, you add both statements, similar to:
 
@@ -344,19 +341,18 @@ A bucket can only have a single policy.  As such, by pasting in the policy above
    ```
 10. Attempt to PUT an object without encryption. The request should fail.
   ```
-  aws s3api put-object --key text01 --body textfile --profile user1 --bucket ${bucket}
+  # put the object without encryption - **this should fail**
+  aws s3api put-object --key text01 --body textfile --bucket ${bucket}
   ```
 11. PUT an object using SSE-S3.  The request should succeed.
   ```
-  aws s3api put-object --key text01 --body textfile --server-side-encryption AES256 --profile user1 --bucket ${bucket}  
+  # put the object with encryption
+  aws s3api put-object --key text01 --body textfile --server-side-encryption AES256 --bucket ${bucket}  
   ```
 12. From the AWS console, click  **Services**  and select  **S3.**  
 13. Click the bucket name. (Copied from CloudFormation Outputs previously.)  
 14. Click on the **Properties** tab.    
 15. Default Encryption for AES-256(SSE-S3) is enabled.  
-
-**Note**  
-Bucket Policies are enforced based on the request from the client.  In this case the Bucket Policy denied the first attempt to PUT an object. Since Default Encryption is enabled the first attempt would have ended up encrypted anyway, however, Default Encryption doesn't override encryption flags.  For example, if Default Encryption is set to AWS-KMS and a request is sent with AES-256(SSE-S3) the request will be written as AES-256(SSE-S3).  Default Encryption behaves like a default not an override.  If a customer has a requirement that all objects have a certain type of encryption, then the only way to meet that requirement is with a bucket policy.
 
 ## Exercise #4 - Enable Versioning
 
@@ -391,10 +387,10 @@ In this lab, you will enable versioning of a bucket, then delete an object.  Fin
 ```bash
 bucket=YOUR_BUCKET_NAME_HERE
 dd if=/dev/zero of=/tmp/tmpfile bs=1024 count=5
-aws s3 cp /tmp/tmpfile s3://$bucket/app1/file1
+aws s3 cp /tmp/tmpfile s3://$bucket/app1/file1 --sse AES256
 ```
 
-5. Go back to the S3 console to explore the result.  Navigate to /app1 in your bucket, and click the button "Verions Show".  
+5. Go back to the S3 console to explore the result.  Make sure you are on the **Overview** tab.  Navigate to /app1 in your bucket, and click the button "Verions Show".  
 
 You now have the old version and the new version of the **_/app1/file1_** object.
 
@@ -432,7 +428,7 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 3. Click **Create Endpoint**.
 4. Select the **S3** service name.
 ![](/images/vpc_endpoint_1.png)
-5. Select the **S3SecurityWorkshopVPC** from the drop down menu.
+5. Select the **SecurityWorkshopVPC** from the drop down menu.
 ![](/images/vpc_endpoint_2.png)
 6. Do not select any route tables for now.  
 ![](/images/vpc_endpoint_3.png)
@@ -446,7 +442,8 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 13. Click the bucket name. (Copied from CloudFormation Outputs previously.)
 14. Click on the **Permissions** tab.  
 14. Click **Bucket Policy**.  
-15. Copy the bucket policy below and paste into the Bucket Policy Editor.
+15. Replace the existing policy with the bucket policy below.
+    Copy and paste this JSON into the Bucket Policy Editor.
 
 ```json
 {
@@ -466,16 +463,16 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 }
 ```
 
-16. Replace BUCKET_NAME with the bucket name and VPC_ENDPOINT_ID with the Endpoint ID.  Sample bucket policy below.  
+16. Replace **BUCKET_NAME** with the bucket name and **VPC_ENDPOINT_ID** with the Endpoint ID.  Sample bucket policy below.  
 ![](/images/vpc_endpoint_6.png)
 17. Click **Save**
 18. Go to your SSH session, the request will fail since the S3 VPCE isn't associated with a route table.  
   
   ```bash
-  aws s3api head-object --key app1/file1 --profile user1 --bucket ${bucket}
+  aws s3api head-object --key app1/file1 --bucket ${bucket}
   ```
 
-19. In the AWS Console go to **VPC**.  
+19. In the AWS Console go to [VPC](https://console.aws.amazon.com/vpc/home?region=us-east-1#dashboard:)
 20. Click **Endpoints**.  
 21. The VPC Endpoint should be selected.  Select **Actions**, then click **Manage Route Tables**.
 22. Select the Route Table that is associated with **S3SecurityWorkshopSubnet**
@@ -485,7 +482,7 @@ In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limi
 24. Go to your SSH session, run the following command. The request should now succeed.  
   
 ```bash
-  aws s3api head-object --key app1/file1 --profile user1 --bucket ${bucket}
+  aws s3api head-object --key app1/file1 --bucket ${bucket}
 ```
 
 25. From the AWS console, click  **Services**  and select  **S3.**
@@ -527,7 +524,7 @@ An alternate method is through the CLI.  Ask you partner to run the command
 
 Make a note of their account number, you will need it to generate the bucket policy.
 
-Navigate to your bucket in the S3 console. ( https://console.aws.amazon.com/s3/home?region=us-east-1 ).  Click on your bucket to open it, and select the Permissions tab.
+Navigate to your bucket in the S3 console. ( https://console.aws.amazon.com/s3/home?region=us-east-1 ).  Click on your bucketname to open the bucket you just created.  You may need to refresh the browser for the new bucket to be listed. Select the Permissions tab.
 
 <div align="center">
 
@@ -550,13 +547,15 @@ _Create GetObject Element of policy_
 **Principal:** The account number you are sharing with
 **Actions:** 
 GetObject
-**Amazon Resource Name:** _( note, edit this for the bucket you created ).  Be sure to include the “*” at the end._
+**Amazon Resource Name:** _( note, edit this for the bucket you created ).  **Be sure to include the “*” at the end.**_
 
-arn:aws:s3:::YOUR-BUCKET-NAME/share/*
+**arn:aws:s3:::YOUR-BUCKET-NAME/\***
 
-This ARN matches all objects in the prefix “share” in bucket “YOUR-BUCKET-NAME”.  
+This ARN matches all objects in bucket “YOUR-BUCKET-NAME”.  
 
-Click Add Statement to add permissions to list objects.
+Click **Add Statement** to add permissions to GET objects.
+
+Before you leave this page, we are going to add a 2nd policy, which will allow the other AWS account to list which objects are in the bucket.
 
 _Create ListBucket Element of policy_
 **Type of Policy:** S3 Bucket Policy
@@ -567,9 +566,11 @@ ListBucket
 _  
 arn:aws:s3:::YOUR-BUCKET-NAME
 
-When you’ve entered the data for your policy, click Add Statement, and Generate Policy.
+When you’ve entered the data for your policy, click **Add Statement**.
 
-Copy the resulting policy JSON to a text file.  It should look something like:
+Click **Generate Policy** and the generator creates your bucket policy JSON.
+
+**Copy the resulting policy JSON to a text file, or into your copy/paste buffer**.  It should look something like:
 
 ```json
 {
@@ -582,7 +583,7 @@ Copy the resulting policy JSON to a text file.  It should look something like:
         "s3:GetObject"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/share/*",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*",
       "Principal": {
         "AWS": [
           "1234567890AB"
@@ -595,7 +596,7 @@ Copy the resulting policy JSON to a text file.  It should look something like:
         "s3:ListBucket"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/share",
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME",
       "Principal": {
         "AWS": [
           "1234567890AB"
@@ -606,14 +607,14 @@ Copy the resulting policy JSON to a text file.  It should look something like:
 }
 ```
 
-Return to the prior S3 tab, where you were editing the bucket policy, and paste in the new policy, then click save.
+Return to the prior S3 tab, where you were editing the bucket policy, and paste in the new policy, then click **Save**.
 
 3. Go to your partners account and verify that you can access the bucket.
 
 ```bash
  bucket=YOUR_BUCKET_NAME
  # List the other account's bucket
- aws s3 ls s3://$bucket
+ aws s3 ls s3://$bucket --recursive
  # Pull the object (GetObject) from the other account's bucket
  aws s3 cp s3://$bucket/shared-data/foo /tmp/myfile
  ls -l /tmp/myfile
@@ -628,7 +629,7 @@ To ensurer you don't continue to be billed for services in your account from thi
 1. In your SSH session run the following command.  
   
   ```bash
-  aws s3 rm s3://${bucket} --recursive  --profile user1
+  aws s3 rm s3://${bucket} --recursive
   ```
 
 2. From the AWS console, click  **Services**  and select  **Config.**  

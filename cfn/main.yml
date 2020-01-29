@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 lab - includes VPC resources.
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Tags:
+        - Key: Project
+          Value: "lab"
+      TemplateURL: "vpc.yml"
+      TimeoutInMinutes: 5
+      Parameters: 
+          EnvironmentName: S3VPC
+          VpcCIDR: 10.2.0.0/16
+          PublicSubnet1CIDR: 10.2.1.0/24
+          IsEventEngine: "false"
+    
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Tags:
+        - Key: Project
+          Value: "lab"
+      TemplateURL: "s3.yml"
+      TimeoutInMinutes: 5
+      Parameters:
+        EnvironmentName: S3
+        PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
+        VPC: !GetAtt VPCStack.Outputs.VPC
+
+
+

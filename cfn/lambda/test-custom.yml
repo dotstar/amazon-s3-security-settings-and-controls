@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  BucketName:
+    Type: String
+    Description: The bucket to be created.
+    Default: daveaws-tmp-01282020
+
+Resources:
+  InitBucket:
+    Type: "Custom::InitBucket"
+    Properties:
+      ServiceToken: !GetAtt LambdaInitFunction.Arn
+      Parameters:
+        - BucketName: !Ref BucketName
+  
+  LambdaInitFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: init-bucket.handler   
+      Role:    !GetAtt InitBucketLambdaRole.Arn
+      Description: Utility routine to support CloudFormation Custom resource to create and initialize S3 bucket
+      Runtime: python3.7
+      Timeout: 300
+      MemorySize: 256
+      Code:
+        S3Bucket: daveaws
+        S3Key: lambda/initbucket.zip
+
+  InitBucketLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: '*'
+            # Resource: arn:aws:logs:*:*:/aws/lambda/init-bucket/*
+          # - Effect: Allow
+          #   Action:
+          #   - events:PutTargets
+          #   - events:DeleteRule
+          #   - lambda:AddPermission
+          #   - events:PutRule
+          #   - events:RemoveTargets
+          #   - lambda:RemovePermission
+          #   Resource: '*'    
+          - Effect: Allow
+            Action:
+            - s3:ListBucketVersions
+            - s3:CreateBucket
+            - s3:ListBucket
+            - s3:GetBucketVersioning
+            - s3:DeleteBucket
+            Resource: !Join [ "", ['arn:aws:s3:::' ,!Ref BucketName]]          - Effect: Allow
+            Action:
+            - s3:HeadBucket
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:DeleteObject
+            Resource: !Join [ "", ['arn:aws:s3:::' ,!Ref BucketName,"/*"]]
+  
+
+

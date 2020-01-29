@@ -1,5 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: S3 lab - includes VPC resources.
+Parameters:
+  BucketName:
+    Type: String
+    Description: Name of bucket to use for this lab
+    Default: daveaws-tmp-xyzzy
+    AllowedPattern: ^[a-zA-Z0-9.\-_]{1,255}$
 Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
@@ -7,7 +13,7 @@ Resources:
       Tags:
       - Key: Project
         Value: lab
-      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/8b6bc8e8e53107d5539a9b0ee7aec3b9.template
+      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/1567414308be2d47a52c47bf1b8f3718.template
       TimeoutInMinutes: 5
       Parameters:
         EnvironmentName: S3VPC
@@ -20,15 +26,8 @@ Resources:
       Tags:
       - Key: Project
         Value: lab
-      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/0ec22a149f932da4229aca300bae9d07.template
+      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/78c93904357a883ace7bd74596def8c8.template
       TimeoutInMinutes: 5
       Parameters:
-        EnvironmentName: S3
-        PublicSubnet1:
-          Fn::GetAtt:
-          - VPCStack
-          - Outputs.PublicSubnet1
-        VPC:
-          Fn::GetAtt:
-          - VPCStack
-          - Outputs.VPC
+        BucketName:
+          Ref: BucketName

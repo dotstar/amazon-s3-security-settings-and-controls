@@ -40,8 +40,6 @@ Resources:
             InstanceType: t2.micro
             Name: !Join [ "-", [ "Cloud9", !Ref EnvironmentName, !Ref "AWS::StackName"] ]
             Repositories:
-                - RepositoryUrl: https://github.com/dotstar/parameter-store
-                  PathComponent: /parameter-store
                 - RepositoryUrl: https://github.com/dotstar/amazon-s3-security-settings-and-controls
                   PathComponent: /amazon-s3-security-settings-and-controls
             OwnerArn: !Sub  "arn:aws:sts::${AWS::AccountId}:assumed-role/TeamRole/MasterKey"
@@ -56,8 +54,6 @@ Resources:
             InstanceType: t2.micro
             Name: !Join [ "-", [ "Cloud9", !Ref EnvironmentName, !Ref "AWS::StackName"] ]
             Repositories:
-                - RepositoryUrl: https://github.com/dotstar/parameter-store
-                  PathComponent: /parameter-store
                 - RepositoryUrl: https://github.com/dotstar/amazon-s3-security-settings-and-controls
                   PathComponent: /amazon-s3-security-settings-and-controls
             SubnetId: !Ref PublicSubnet1

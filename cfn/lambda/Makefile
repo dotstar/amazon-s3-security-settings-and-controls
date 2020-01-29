@@ -1,11 +1,22 @@
 zip=initbucket.zip
+bucketname=daveaws
+bucketprefix=lambda
 all: zip push 
 
+# Create zipfile with our lambda code and it's dependencies
 zip:
 	cd package && zip -r9 ../../${zip} .
 	zip -g ../${zip} init-bucket.py
+# Push the zip to S3
 push:
-	aws s3 cp ../${zip} s3://daveaws/lambda/${zip}
+	aws s3 cp ../${zip} s3://${bucketname}/${bucketprefix}/${zip}
+# Create/re-create lambda package requirements
+# This is larger than I'd prefer - could use some weight loss.
+requirements:
+	rm -rf package
+	pip install -r requirements.txt --target ./package
+
+# Used for testing ...
 create-lambda:
 	aws lambda create-function \
 		--function-name "init-bucket" \
@@ -19,9 +30,7 @@ create-lambda:
 
 delete:
 	aws lambda delete-function --function-name init-bucket
-requirements:
-	rm -rf package
-	pip install -r requirements.txt --target ./package
+
 
 stackname=lb4
 stack:

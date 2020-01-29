@@ -2,124 +2,81 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Creates a VPC and Cloud9 instance, including VPCs for a future Aurora database.
 
 Parameters:
-
-  EnvironmentName:
-    Description: An environment name that is prefixed to resource names
-    Type: String
-    Default: securityworkshop
-  LatestAmiId:
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
-  PublicSubnet1:
-    Type: String
-  VPC:
-    Type: String
-
-Resources:  
-    Bucket01:
-      Type: AWS::S3::Bucket
-      DeletionPolicy: Retain
-      UpdateReplacePolicy: Retain
-      # Properties:
-          # BucketName: daveaws-foo
-          # BucketEncryption:
-          #     ServerSideEncryptionConfiguration:
-          #         - ServerSideEncryptionByDefault:
-          #             SSEAlgorithm: AES256          
-                        
-    # This instance run's it's user-data script then terminates.
-    # It is used to put some data in the S3 buckets.
-    # This functionality should probably be a custom resource.
-    EC2Admin: 
-        Type: "AWS::EC2::Instance"
-        DependsOn: Bucket01
-        Properties: 
-            ImageId: !Ref LatestAmiId
-            InstanceType: "t2.micro"
-            SubnetId: 
-                Ref: PublicSubnet1
-            Tags: 
-                - Key: Name
-                  Value: Admin
-            SecurityGroupIds: 
-                - Ref: NoGoInstanceSecurityGroup
-            IamInstanceProfile: 
-                Ref: AdminInstanceProfile
-            UserData: 
-                'Fn::Base64': 
-                  !Sub |
-                    #!/bin/bash -xe
-                    BUCKET01=${Bucket01}
-                    echo 'AdminInstance' | sudo tee -a  /proc/sys/kernel/hostname
-                    dd if=/dev/zero of=/tmp/output  bs=1M  count=1
-                    aws s3api put-object --bucket $BUCKET01 --key app1/file1 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app1/file2 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app1/file3 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app1/file4 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app1/file5 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app2/file1 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app2/file2 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app2/file3 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app2/file4 --body /tmp/output
-                    aws s3api put-object --bucket $BUCKET01 --key app2/file5 --body /tmp/output
-                    sleep 2
-                    # Now stop this instance
-                    AZ=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
-                    # delete last digit to turn AZ into REGION
-                    REGION=$(echo $AZ | sed s/.$//)
-                    iid=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-                    aws ec2 terminate-instances --instance-ids $iid --region $REGION
-
-    AdminRole: 
-        Type: "AWS::IAM::Role"
-        Properties: 
-            Description: Used just long enough to put some data in S3 then delete's self via user-data
-            # Enable Session Manager for debugging
-            ManagedPolicyArns:
-                - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-            AssumeRolePolicyDocument: 
-                Version: "2012-10-17"
-                Statement: 
-                    - Effect: Allow
-                      Principal: 
-                        Service: 
-                            - "ec2.amazonaws.com"
-                      Action: 
-                        - "sts:AssumeRole"
-            Path: "/"
-            Policies: 
-            - PolicyName: admin
-              PolicyDocument: 
-                Version: "2012-10-17"
-                Statement: 
-                - Effect: Allow
-                  Action: 
-                  - "ec2:TerminateInstances"
-                  - "s3:*"
-                  Resource: "*"
-        
- 
-    AdminInstanceProfile: 
-        Type: "AWS::IAM::InstanceProfile"
-        Properties: 
-            Path: "/"
-            Roles: 
-                - !Ref AdminRole
-        
-    NoGoInstanceSecurityGroup:
-        Type: AWS::EC2::SecurityGroup
-        Properties:
-            GroupDescription: No Inbound ingress rules
-            VpcId:
-                Ref: VPC
-        
-    
-
-
-Outputs:
   BucketName:
-    Description: Bucket used in S3 lab
-    Value: !Ref Bucket01
-    Export:
-        Name: LabBucketName
+    Type: String
+    Description: The bucket to be created.
+    Default: daveaws-tmp-01282020
+  LambdaBucket:
+    Type: String
+    Description: Location where we  find our custom lambda
+    Default: daveaws
+  LambdaKey:
+    Type: String
+    Description: Location where we find our custom lambda 
+    Default: lambda/initbucket.zip
+Resources:  
+  InitBucket:
+    Type: "Custom::InitBucket"
+    Properties:
+      ServiceToken: !GetAtt LambdaInitFunction.Arn
+      Parameters:
+        - BucketName: !Ref BucketName
+  
+  LambdaInitFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: init-bucket.handler   
+      Role:    !GetAtt InitBucketLambdaRole.Arn
+      Description: Utility routine to support CloudFormation Custom resource to create and initialize S3 bucket
+      Runtime: python3.7
+      Timeout: 300
+      MemorySize: 256
+      Code:
+        S3Bucket: !Ref LambdaBucket
+        S3Key: !Ref LambdaKey
+
+  InitBucketLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            # Resource: '*'
+            Resource: arn:aws:logs:*:*:log-group:/aws/lambda/*
+          - Effect: Allow
+            Action:
+            - s3:ListBucketVersions
+            - s3:CreateBucket
+            - s3:ListBucket
+            - s3:GetBucketVersioning
+            - s3:DeleteBucket
+            Resource: !Join [ "", ['arn:aws:s3:::' ,!Ref BucketName]]          
+          - Effect: Allow
+            Action:
+            - s3:HeadBucket
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:DeleteObject
+            Resource: !Join [ "", ['arn:aws:s3:::' ,!Ref BucketName,"/*"]]
+
+
   

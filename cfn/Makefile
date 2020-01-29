@@ -35,22 +35,5 @@ outputs:
 resources:
 	aws cloudformation describe-stack-resources --stack-name ${stack} --query StackResources[].[LogicalResourceId,ResourceStatus,Timestamp] --output table
 
-# crstack  for 2nd stack that was used to testing the custom resource
-crstack=testcustom7
-
-create-custom:
-	aws cloudformation create-stack \
-	  --stack-name ${crstack} \
-	  --template-body file://test-custom.yml \
-	  --capabilities CAPABILITY_IAM
-
-update-custom:
-	aws cloudformation update-stack --stack-name ${crstack} --template-body fileL//test-custom.yml --capabilities CAPABILITY_IAM
-test-custom:
-	cfn-lint test-custom.yml 
-
-delete-custom:
-	aws cloudformation delete-stack --stack-name ${crstack}
-
 lambda:
 	cd lambda && make zip && make push

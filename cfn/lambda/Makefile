@@ -1,5 +1,5 @@
 zip=initbucket.zip
-bucketname=daveaws
+bucketname=daveaws-www-us-east-1
 bucketprefix=lambda
 all: zip push 
 

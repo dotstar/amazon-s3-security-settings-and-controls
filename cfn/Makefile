@@ -1,16 +1,17 @@
-stack=s3
+stack=s3lab
 template=main.yml
+s3deploybucket=daveaws
 test:
 	# cfn-lint ${template} --ignore-checks W3010,W1001,W8001
 	cfn-lint ${template}
 
-package: lambda
-	aws s3 cp s3.yml s3://daveaws/cloudformation/s3/s3.yml
-	aws s3 cp vpc.yml s3://daveaws/cloudformation/s3/vpc.yml
+package: 
+	# aws s3 cp s3.yml s3://daveaws/cloudformation/s3/s3.yml
+	# aws s3 cp vpc.yml s3://daveaws/cloudformation/s3/vpc.yml
 	aws cloudformation package \
 	  --template-file ${template} \
-	  --s3-bucket daveaws \
-	  --s3-prefix cloudformation/s3 \
+	  --s3-bucket ${s3deploybucket} \
+	  --s3-prefix cloudformation/s3/templates \
 	  --output-template-file packaged-${stack}
 
 deploy: package
@@ -36,4 +37,4 @@ resources:
 	aws cloudformation describe-stack-resources --stack-name ${stack} --query StackResources[].[LogicalResourceId,ResourceStatus,Timestamp] --output table
 
 lambda:
-	cd lambda && make zip && make push
+	cd lambda && make zip &&  make push

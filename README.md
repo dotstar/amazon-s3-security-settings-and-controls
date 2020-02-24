@@ -20,113 +20,28 @@ This workshop will focus on several areas of the [AWS Security Best Practices fo
 ### Requirements
 
 * AWS account - if you're doing this workshop as a part of an AWS event, you will be provided an account through a platform called Event Engine. The workshop administrator will provide instructions. If the event specifies you'll need your own account or if you're doing this workshop on your own, it's easy and free to [create an account](https://aws.amazon.com/) if you do not have one already.
-* If using your own AWS account you need to setup a VPC for the rest of the lab.  [Lab0](cfn) has abbreviated instructions on how to run the CloudFormation template to add the VPC.
+* If using your own AWS account you will need to run a submit CloudFormation template which creates a VPC, Cloud9, and an S3 bucket.  Instructions follow, expand the section *"> If you are using your own account"*
 
-Familiarity with AWS, Python, CloudFormation, EC2, and Lambda is a plus but not required.
+Familiarity with AWS, S3, CloudFormation, and Cloud9 is a plus but not required.
 
 <details><summary>If you are using your own account</summary>
 
 ## Deploy AWS resources using CloudFormation
 
-### This is out-dated and needs to be updated
+### Use the CloudFormation CLI to create the lab
 
-1. Click one of the launch links in the table below to deploy the resources using CloudFormation.  Use a control click or right click to open in a new tab to prevent losing your Github page.
+The lab CloudFormation templates are in the *cfn* directory. We've automated the creation of the stack, which includes a Cloud9 instance, a small VPC, and a pre-populated S3 bucket.
 
-  | **Region Code** | **Region Name** | **Launch** |
-  | --- | --- | --- |
-  | us-west-1 | US West (N. California) | [Launch in us-west-1](https://console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | us-west-2 | US West (Oregon) | [Launch in us-west-2](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | us-east-1 | US East (N. Virginia) | [Launch in us-east-1](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | us-east-2 | US East (Ohio) | [Launch in us-east-2](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ca-central-1 | Canada (Central) | [Launch in ca-central-1](https://console.aws.amazon.com/cloudformation/home?region=ca-central-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | eu-central-1 | EU (Frankfurt) | [Launch in eu-central-1](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | eu-west-1 | EU (Ireland) | [Launch in eu-west-1](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | eu-west-2 | EU (London) | [Launch in eu-west-2](https://console.aws.amazon.com/cloudformation/home?region=eu-west-2#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | eu-west-3 | EU (Paris) | [Launch in eu-west-3](https://console.aws.amazon.com/cloudformation/home?region=eu-west-3#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | eu-north-1 | EU (Stockholm) | [Launch in eu-north-1](https://console.aws.amazon.com/cloudformation/home?region=eu-north-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-east-1 | Asia Pacific (Hong Kong) | [Launch in ap-east-1](https://console.aws.amazon.com/cloudformation/home?region=ap-east-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-northeast-1 | Asia Pacific (Tokyo) | [Launch in ap-northeast-1](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-northeast-2 | Asia Pacific (Seoul) | [Launch in ap-northeast-2](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-2#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-northeast-3 | Asia Pacific (Osaka-Local) | [Launch in ap-northeast-3](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-3#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-southeast-1 | Asia Pacific (Singapore) | [Launch in ap-southeast-1](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-southeast-2 | Asia Pacific (Sydney) | [Launch in ap-southeast-2](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | ap-south-1 | Asia Pacific (Mumbai) | [Launch in ap-south-1](https://console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | me-south-1 | Middle East (Bahrain) | [Launch in me-south-1](https://console.aws.amazon.com/cloudformation/home?region=me-south-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
-  | sa-east-1 | South America (São Paulo) | [Launch in sa-east-1](https://console.aws.amazon.com/cloudformation/home?region=sa-east-1#/stacks/new?stackName=S3SecurityWorkshop&amp;templateURL=https://storage-specialists-cf-templates.s3-us-west-2.amazonaws.com/2019/s3_security.json) |
+Download the lab to a shell where you will have access to _git_, the _AWS CLI_,  and _make_.
 
-2. Click  **Next**  on the Create Stack page.
-3. Click  **Next**.
-4. Click  **Next**  Again. (skipping the Options and Advanced options sections)
-5. On the Review page, scroll to the bottom and check the boxes to acknowledge that CloudFormation will create IAM resources, then click  **Create stack**.  
-
-  ![](images/mod1cf1.png)
-6. Click **Events**. Events will not auto refresh.  You will need to manually refresh the page using the refresh button on the right side of the page.
-7. Watch for **S3SecurityWorkshop** and a status of **CREATE_COMPLETE**
-
-  ![](images/cf_complete.png)
-8. Click **Output**.  
-9. Copy and paste the name of Bucket01 into a document on your computer.  
-
-**Note:** Instances that are launched as part of this CloudFormation template may be in the initializing state for few minutes.
-
-## Connect to the EC2 Instance using EC2 Instance Connect
-
-1. From the AWS console, click  **Services**  and select  **EC2.**
-2. Select  **Instances**  from the menu on the left.
-3. Wait until the state of the S3_Workshop_Instance01 instance  shows as _running_ and all Status Checks have completed (i.e. **not** in _Initializing_ state).
-4. Right-click on the **S3_Workshop_Instance01** instance and select  **Connect** from the menu.
-5. From the dialog box, select the EC2 Instance Connect option, as shown below:
-
-  ![](images/mod1ssh1.png)
-
-6. For the **User name** field, enter "ec2-user", then click **Connect**.
-
-A new dialog box or tab on your browser should appear, providing you with a command line interface (CLI).  Keep this open - you will use the command line on the instance throughout this workshop.
-
-**Note:**  The SSH session will disconnect after a period of inactivity.  If your session becomes unresponsive, close the window and repeat the steps above to reconnect.
+We need an S3 bucket, to upload our CloudFormation custom resource.  The bucket is created based on the Linux UUID command.  Make sure that _uuid_ is available on your system before building the CloudFormation template.
 
 
-## Setup AWS CLI
-
-1. In the CLI for the instance, run the following commands to setup the AWS CLI
-    ```
-    aws configure
-    ```
-    Leave Access Key and Secret Key blank, set the region to the region you deployed your CloudFormation template in , output format leave default.
-
-  ![](images/aws_configure.png)  
-
-2. Create a credentials file to be used by the AWS CLI.  This will allow you to switch between two different users easily.  
-    ```
-    cd ~/.aws  
-    vi credentials  
-    ```
-Copy and paste the following credentials file template into your vi session.
 ```
-[user1]
-aws_access_key_id =
-aws_secret_access_key =
-[user2]
-aws_access_key_id =
-aws_secret_access_key =
-```    
-3. From the AWS console, click  **Services**  and select  **IAM.**  
-4. Click **Users** in the left pane.  
-5. Click **s3_security_lab_user1**.  
-6. Click **Security credentials** tab.  
-7. Click **Create access key**.  
-8. Copy the Access key ID and Secret access key into the credentials file under User1.
-9. Click **Close**.
-10. Click **Users** in the left pane.
-11. Click **s3_security_lab_user2**.
-12. Click **Create access key**.  
-13. Copy the Access key ID and Secret access key into the credentials file under User2.
-14. Compare you credentials file to the one below and ensure your formatting is the same.  
-
-  ![](images/credentials.png)  
-
-15. Save the file
-
+git clone https://github.com/dotstar/amazon-s3-security-settings-and-controls.git
+cd amazon-s3-security-settings-and-controls/cfn
+make deploy
+```
 </details>
 
 <details><summary>If you are running this lab at an AWS Event</summary>
@@ -174,9 +89,14 @@ From the AWS console, navigate to [Cloud9](https://console.aws.amazon.com/cloud9
 
 ### IMPORTANT: Workshop Cleanup
 
-If you're attending an AWS event and are provided an account to use, you can ignore this section because we'll destroy the account once the workshop concludes.
+If you're attending an AWS event and are provided an account to use, you can ignore this section because we'll destroy the account once the workshop concludes.  
 
-**If you are using your own account**, it is **VERY** important you clean up resources created during the workshop. Follow these steps once you're done going through the workshop to delete resources that were created.  Please follow the instructions, at the end of the lab, to delete these resources.
+**If you are using your own account**, it is **VERY** important you clean up resources created during the workshop. Follow these steps once you're done going through the workshop to delete resources that were created.  Please follow the instructions, at the end of the lab, to delete these resources.  If you used the CloudFormation templates, as described in the instructions, simply delete the CloudFormation stack.  One way to do this is:
+
+```
+cd cfn
+make delete
+```
 
 ## Exercise #1 - Block Public Access
 

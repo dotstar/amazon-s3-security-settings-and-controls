@@ -34,6 +34,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaBucket
         S3Key: !Ref LambdaKey
+        # ZipFile: initbucket.zip
 
   InitBucketLambdaRole:
     Type: AWS::IAM::Role

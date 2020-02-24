@@ -13,7 +13,7 @@ Resources:
       Tags:
       - Key: Project
         Value: lab
-      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/1567414308be2d47a52c47bf1b8f3718.template
+      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/templates/1567414308be2d47a52c47bf1b8f3718.template
       TimeoutInMinutes: 5
       Parameters:
         EnvironmentName: S3VPC
@@ -26,7 +26,7 @@ Resources:
       Tags:
       - Key: Project
         Value: lab
-      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/78c93904357a883ace7bd74596def8c8.template
+      TemplateURL: https://s3.us-east-2.amazonaws.com/daveaws/cloudformation/s3/templates/026ea9371424b986517eb33dd9ef8137.template
       TimeoutInMinutes: 5
       Parameters:
         BucketName:

@@ -304,6 +304,30 @@ In this lab, you will enable versioning of a bucket, then delete an object.  Fin
 ![account defaults](img/8.png)
 </div>
 
+   In your terminal window, list all files in your bucket:
+```bash
+bucket=YOUR_BUCKET_NAME_HERE
+aws s3 ls s3://$bucket --recursive
+```
+
+   The result should be 10 objects, all the same size, similar to:
+```
+TeamRole:~ $ aws s3 ls $bucket --recursive                                                                                                                                                                                          
+2020-02-26 16:58:17    1048576 app1/file1
+2020-02-26 16:58:18    1048576 app1/file2
+2020-02-26 16:58:19    1048576 app1/file3
+2020-02-26 16:58:21    1048576 app1/file4
+2020-02-26 16:58:22    1048576 app1/file5
+2020-02-26 16:58:22    1048576 app2/file1
+2020-02-26 16:58:23    1048576 app2/file2
+2020-02-26 16:58:24    1048576 app2/file3
+2020-02-26 16:58:24    1048576 app2/file4
+2020-02-26 16:58:25    1048576 app2/file5
+2020-02-26 19:01:23         17 text01
+
+```
+  Next, we will enable versioning and then overwrite one of these objects.
+
 3. Select the Versioning button, and enable Versioning.
 
 <div align="center">
@@ -348,9 +372,13 @@ Versioning comes in handy if you accidentally delete an object.  For more robust
 
 Note - Versioning can not be disabled, but it can be suspended.  
 
-## Exercise #5- Restrict Access to a  S3 VPC Endpoint
+## Exercise #5- Restrict Access to an S3 VPC Endpoint
 
-In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limit access to only requests that pass through the VPC Endpoint.  This is an easy way to limit access to only clients in your VPC.
+In this exercise we will configure a S3 VPC Endpoint and a bucket policy to limit access to only requests that pass through the VPC Endpoint.  This is an easy way to limit access to only clients in your VPC.  
+
+A VPC endpoint enables you to create a private connection between the services in your VPC and an AWS service.  Security policies sometimes prescribe VPC endpoints because your traffic doesn't traverse public IP space to access the AWS services.
+
+In this lab, we will create an endpoint and then lockdown the bucket with an IAM policy so that it can only be accessed by resources in your VPC.
 
 1. In the AWS Console go to [VPC](https://console.aws.amazon.com/vpc/home?region=us-east-1#dashboard:).  
 2. Click **Endpoints**.  
